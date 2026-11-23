@@ -78,7 +78,8 @@ jobs:
 
           # --- libgit2 (shared, so no extra system libs are needed at link time)
           fetch https://github.com/libgit2/libgit2/archive/refs/tags/v1.7.1.tar.gz libgit2.tar.gz
-          tar xzf libgit2.tar.gz
+          # the test fixtures contain symlinks that cannot be created on Windows
+          tar xzf libgit2.tar.gz --exclude='libgit2-1.7.1/tests'
           cmake -S libgit2-1.7.1 -B libgit2-build -G Ninja -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX="$WS/libgit2-1.7.1" -DBUILD_SHARED_LIBS=ON \
             -DBUILD_TESTS=OFF -DBUILD_CLI=OFF -DUSE_SSH=OFF -DUSE_HTTPS=WinHTTP \
