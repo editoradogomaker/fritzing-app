@@ -38,7 +38,7 @@ jobs:
           version: ${{ env.QT_VERSION }}
           host: windows
           arch: win64_msvc2022_64
-          modules: qtserialport
+          modules: qtserialport qt5compat # qt5compat is required by quazip
           cache: true
 
       - name: Set up MSVC
@@ -155,9 +155,9 @@ jobs:
           D="$NAME"
           mkdir "$D"
           cp release64/Fritzing.exe "$D/"
-          windeployqt --release --no-translations --compiler-runtime --dir "$D" "$D/Fritzing.exe"
-
           cp libgit2-1.7.1/bin/git2.dll quazip-${QT_VERSION}-1.4intuisphere/bin/quazip1-qt6.dll "$D/"
+          # also scan quazip so that Qt6Core5Compat.dll gets deployed
+          windeployqt --release --no-translations --compiler-runtime --dir "$D" "$D/Fritzing.exe" "$D/quazip1-qt6.dll"
           cp ngspice-42/runtime/ngspice.dll "$D/"
           cp -r ngspice-42/runtime/ngspice "$D/ngspice"
           # ngspice.dll may depend on the OpenMP runtime
