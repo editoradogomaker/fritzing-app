@@ -187,7 +187,7 @@ jobs:
 
       - name: Generate parts.db
         continue-on-error: true # the app creates it on first start if this fails
-        timeout-minutes: 10
+        timeout-minutes: 3
         run: |
           cd "$WS/$RELEASE_NAME"
           ./Fritzing.exe -db "$PWD/fritzing-parts/parts.db" -pp "$PWD/fritzing-parts" -f "$PWD"
