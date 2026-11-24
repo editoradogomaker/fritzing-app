@@ -199,12 +199,21 @@ jobs:
             echo "::error::Fritzing -db did not finish in 10 minutes; last log lines:"
             tail -n 60 db.log || true
             powershell -Command "Get-Process Fritzing | Select-Object Id,CPU,Responding,MainWindowTitle | Format-List"
+            powershell -Command "Add-Type -AssemblyName System.Windows.Forms,System.Drawing; \$b=[System.Windows.Forms.SystemInformation]::VirtualScreen; \$bmp=New-Object System.Drawing.Bitmap \$b.Width,\$b.Height; [System.Drawing.Graphics]::FromImage(\$bmp).CopyFromScreen(\$b.Location,[System.Drawing.Point]::Empty,\$b.Size); \$bmp.Save('$WS/shot.png')" || true
             taskkill //F //IM Fritzing.exe || true
             exit 1
           fi
           tail -n 20 db.log || true
           test -s fritzing-parts/parts.db
           rm -f db.log
+
+      - name: Upload debug screenshot
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-screenshot
+          path: shot.png
+          if-no-files-found: ignore
 
       - name: Zip
         run: |
