@@ -186,11 +186,25 @@ jobs:
           # keep .git: Fritzing reads the parts repo sha (PartsChecker::getSha) to build/load parts.db
 
       - name: Generate parts.db
-        timeout-minutes: 10
+        timeout-minutes: 15
         run: |
           cd "$WS/$RELEASE_NAME"
-          ./Fritzing.exe -db "$PWD/fritzing-parts/parts.db" -pp "$PWD/fritzing-parts" -f "$PWD"
+          ./Fritzing.exe -d "$PWD/db.log" -db "$PWD/fritzing-parts/parts.db" -pp "$PWD/fritzing-parts" -f "$PWD" &
+          PID=$!
+          for i in $(seq 1 40); do
+            kill -0 $PID 2>/dev/null || break
+            sleep 15
+          done
+          if kill -0 $PID 2>/dev/null; then
+            echo "::error::Fritzing -db did not finish in 10 minutes; last log lines:"
+            tail -n 60 db.log || true
+            powershell -Command "Get-Process Fritzing | Select-Object Id,CPU,Responding,MainWindowTitle | Format-List"
+            taskkill //F //IM Fritzing.exe || true
+            exit 1
+          fi
+          tail -n 20 db.log || true
           test -s fritzing-parts/parts.db
+          rm -f db.log
 
       - name: Zip
         run: |
