@@ -108,8 +108,11 @@ jobs:
           7z x -y -oclipper clipper.zip > /dev/null
           CPP="$(dirname "$(find clipper -path '*cpp/CMakeLists.txt' | head -1)")"
           cmake -S "$CPP" -B clipper-build -G Ninja -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX="$WS/Clipper1-6.4.2" -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+            -DCMAKE_INSTALL_PREFIX="$WS/Clipper1-6.4.2" -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DBUILD_SHARED_LIBS=OFF
           cmake --build clipper-build --target install
+          mkdir -p "$WS/Clipper1-6.4.2/lib"
+          [ -f "$WS/Clipper1-6.4.2/lib/polyclipping.lib" ] || cp "$(find clipper-build -name 'polyclipping.lib' | head -1)" "$WS/Clipper1-6.4.2/lib/"
           if [ ! -f "$WS/Clipper1-6.4.2/include/polyclipping/clipper.hpp" ]; then
             mkdir -p "$WS/Clipper1-6.4.2/include/polyclipping"
             cp "$CPP/clipper.hpp" "$WS/Clipper1-6.4.2/include/polyclipping/"
