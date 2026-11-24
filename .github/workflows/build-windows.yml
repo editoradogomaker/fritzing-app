@@ -185,6 +185,26 @@ jobs:
           git clone --depth 1 --branch master https://github.com/fritzing/fritzing-parts.git "$D/fritzing-parts"
           # keep .git: Fritzing reads the parts repo sha (PartsChecker::getSha) to build/load parts.db
 
+          # custom parts shipped with this build (.fzpz = zip: part.<n>.fzp + svg.<view>.<file>.svg)
+          python - "$D/fritzing-parts" fritzing-app/parts-custom <<'EOF'
+          import glob, os, sys, zipfile
+          parts, src = sys.argv[1:3]
+          for fz in glob.glob(os.path.join(src, "**", "*.fzpz"), recursive=True):
+              with zipfile.ZipFile(fz) as z:
+                  for n in z.namelist():
+                      if n.startswith("part."):
+                          dst = os.path.join(parts, "contrib", n[len("part."):])
+                      elif n.startswith("svg."):
+                          view, name = n[len("svg."):].split(".", 1)
+                          dst = os.path.join(parts, "svg", "contrib", view, name)
+                      else:
+                          continue
+                      os.makedirs(os.path.dirname(dst), exist_ok=True)
+                      with open(dst, "wb") as f:
+                          f.write(z.read(n))
+                  print("added custom part", fz)
+          EOF
+
       - name: Generate parts.db
         timeout-minutes: 15
         run: |
