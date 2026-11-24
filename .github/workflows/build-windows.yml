@@ -183,14 +183,14 @@ jobs:
           cd ..
 
           git clone --depth 1 --branch master https://github.com/fritzing/fritzing-parts.git "$D/fritzing-parts"
-          rm -rf "$D/fritzing-parts/.git"
+          # keep .git: Fritzing reads the parts repo sha (PartsChecker::getSha) to build/load parts.db
 
       - name: Generate parts.db
-        continue-on-error: true # the app creates it on first start if this fails
-        timeout-minutes: 3
+        timeout-minutes: 10
         run: |
           cd "$WS/$RELEASE_NAME"
           ./Fritzing.exe -db "$PWD/fritzing-parts/parts.db" -pp "$PWD/fritzing-parts" -f "$PWD"
+          test -s fritzing-parts/parts.db
 
       - name: Zip
         run: |
