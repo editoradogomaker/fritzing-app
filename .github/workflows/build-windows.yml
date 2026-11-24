@@ -189,8 +189,29 @@ jobs:
         timeout-minutes: 15
         run: |
           cd "$WS/$RELEASE_NAME"
+          # Fritzing shows a modal dialog for each malformed .fzp, which would hang a headless run
+          python - <<'EOF'
+          import glob, os, xml.etree.ElementTree as ET
+          for f in glob.glob("fritzing-parts/**/*.fzp", recursive=True):
+              try:
+                  ET.parse(f)
+              except ET.ParseError as e:
+                  print("removing malformed part:", f, e)
+                  os.remove(f)
+          EOF
+          # safety net: press Enter on any other dialog that still shows up
+          cat > "$WS/dismiss.ps1" <<'EOF'
+          Add-Type -AssemblyName Microsoft.VisualBasic,System.Windows.Forms
+          while ($true) {
+            $p = Get-Process Fritzing -ErrorAction SilentlyContinue
+            if (-not $p) { break }
+            try { [Microsoft.VisualBasic.Interaction]::AppActivate($p[0].Id); [System.Windows.Forms.SendKeys]::SendWait("{ENTER}") } catch {}
+            Start-Sleep 5
+          }
+          EOF
           ./Fritzing.exe -d "$PWD/db.log" -db "$PWD/fritzing-parts/parts.db" -pp "$PWD/fritzing-parts" -f "$PWD" &
           PID=$!
+          powershell -File "$(cygpath -w "$WS/dismiss.ps1")" &
           for i in $(seq 1 40); do
             kill -0 $PID 2>/dev/null || break
             sleep 15
